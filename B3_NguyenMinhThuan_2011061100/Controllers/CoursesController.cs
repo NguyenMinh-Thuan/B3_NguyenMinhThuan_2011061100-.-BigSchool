@@ -1,8 +1,10 @@
 ﻿using B3_NguyenMinhThuan_2011061100.Models;
 using B3_NguyenMinhThuan_2011061100.ViewModels;
 using Microsoft.AspNet.Identity;
+using Microsoft.Owin.Security.Provider;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -28,23 +30,44 @@ namespace B3_NguyenMinhThuan_2011061100.Controllers
         }
         [Authorize]
         [HttpPost]
-       [ValidateAntiForgeryToken]
+        [ValidateAntiForgeryToken]
         public ActionResult Create(CourseViewModel viewModel)
         {
-           if (!ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 viewModel.Categories = _dbcontext.Categories.ToList();
-                return View("Create",viewModel);
+                return View("Create", viewModel);
             }
             var course = new Course
             {
                 LecturerId = User.Identity.GetUserId(),
                 DateTime = viewModel.GetDateTime(),
-                CategoryId= viewModel.Category,
+                CategoryId = viewModel.Category,
                 Place = viewModel.Place
             };
             _dbcontext.Courses.Add(course);
-            _dbcontext.SaveChanges(); return RedirectToAction("Index", "Home");
+            _dbcontext.SaveChanges();
+            return RedirectToAction("Index", "Home");
         }
+
+        [Authorize]
+        public ActionResult Attending()
+        {
+            var userId = User.Identity.GetUserId();
+
+            var courses =_dbcontext.Attendances
+                .Where(a  => a.AttendeeId == userId)
+                .Select(a => a.Course)
+                .Include(l => l.Lecturer)
+                .Include(l => l.Category)
+                .ToList();
+            var viewModel = new CoursesViewModel
+            {
+                UpcommingCourses = courses,
+                ShowAction = User.Identity.IsAuthenticated
+            };
+            return View(viewModel);
+        }
+
     }
 }

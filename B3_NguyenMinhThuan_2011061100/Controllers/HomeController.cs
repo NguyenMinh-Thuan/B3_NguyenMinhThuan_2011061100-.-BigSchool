@@ -1,4 +1,5 @@
 ﻿using B3_NguyenMinhThuan_2011061100.Models;
+using B3_NguyenMinhThuan_2011061100.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -17,28 +18,21 @@ namespace B3_NguyenMinhThuan_2011061100.Controllers
             _dbContext = new ApplicationDbContext();
 
         }
+
         public ActionResult Index()
         {
-            var upcomingCourse = _dbContext.Courses
+            var upcommingCourses = _dbContext.Courses
                 .Include(c => c.Lecturer)
                  .Include(c => c.Category)
                  .Where(c => c.DateTime > DateTime.Now);
 
-            return View(upcomingCourse);
-        }
+            var viewModel = new CoursesViewModel
+            {
+                UpcommingCourses = upcommingCourses,
+                ShowAction = User.Identity.IsAuthenticated
+            };
 
-        public ActionResult About()
-        {
-            ViewBag.Message = "Your application description page.";
-
-            return View();
-        }
-
-        public ActionResult Contact()
-        {
-            ViewBag.Message = "Your contact page.";
-
-            return View();
+            return View(viewModel);
         }
     }
 }
